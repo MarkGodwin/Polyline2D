@@ -277,11 +277,12 @@ private:
 		if (jointStyle == JointStyle::MITER) {
 			// calculate each edge's intersection point
 			// with the next segment's central line
-			auto sec1 = LineSegment<Vec2>::intersection(segment1.edge1, segment2.edge1, true);
-			auto sec2 = LineSegment<Vec2>::intersection(segment1.edge2, segment2.edge2, true);
+			bool succ1, succ2;
+			auto sec1 = LineSegment<Vec2>::intersection(segment1.edge1, segment2.edge1, true, succ1);
+			auto sec2 = LineSegment<Vec2>::intersection(segment1.edge2, segment2.edge2, true, succ2);
 
-			end1 = sec1 ? *sec1 : segment1.edge1.b;
-			end2 = sec2 ? *sec2 : segment1.edge2.b;
+			end1 = succ1 ? sec1 : segment1.edge1.b;
+			end2 = succ2 ? sec2 : segment1.edge2.b;
 
 			nextStart1 = end1;
 			nextStart2 = end2;
@@ -316,17 +317,18 @@ private:
 			}
 
 			// calculate the intersection point of the inner edges
-			auto innerSecOpt = LineSegment<Vec2>::intersection(*inner1, *inner2, allowOverlap);
+			bool success;
+			auto innerSecOpt = LineSegment<Vec2>::intersection(*inner1, *inner2, allowOverlap, success);
 
-			auto innerSec = innerSecOpt
-			                ? *innerSecOpt
+			auto innerSec = success
+			                ? innerSecOpt
 			                // for parallel lines, simply connect them directly
 			                : inner1->b;
 
 			// if there's no inner intersection, flip
 			// the next start position for near-180° turns
 			Vec2 innerStart;
-			if (innerSecOpt) {
+			if (success) {
 				innerStart = innerSec;
 			} else if (angle > pi / 2) {
 				innerStart = outer1->b;

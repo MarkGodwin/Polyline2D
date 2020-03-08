@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Vec2.h"
-#include <optional>
 
 namespace crushedpixel {
 
@@ -48,7 +47,7 @@ struct LineSegment {
 		       : vec;
 	}
 
-	static std::optional<Vec2> intersection(const LineSegment &a, const LineSegment &b, bool infiniteLines) {
+	static Vec2 intersection(const LineSegment &a, const LineSegment &b, bool infiniteLines, bool &success) {
 		// calculate un-normalized direction vectors
 		auto r = a.direction(false);
 		auto s = b.direction(false);
@@ -58,9 +57,11 @@ struct LineSegment {
 		auto uNumerator = Vec2Maths::cross(originDist, r);
 		auto denominator = Vec2Maths::cross(r, s);
 
+		success = false;
+
 		if (std::abs(denominator) < 0.0001f) {
 			// The lines are parallel
-			return std::nullopt;
+			return Vec2();
 		}
 
 		// solve the intersection positions
@@ -69,11 +70,12 @@ struct LineSegment {
 
 		if (!infiniteLines && (t < 0 || t > 1 || u < 0 || u > 1)) {
 			// the intersection lies outside of the line segments
-			return std::nullopt;
+			return Vec2();
 		}
 
 		// calculate the intersection point
 		// a.a + r * t;
+		success = true;
 		return Vec2Maths::add(a.a, Vec2Maths::multiply(r, t));
 	}
 };
